@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TASKFLOW — タスク管理</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3f;
+    --accent: #6c63ff;
+    --accent2: #ff6b6b;
+    --accent3: #43e97b;
+    --warn: #f7971e;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --danger: #ff4757;
+    --safe: #2ed573;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(108,99,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,99,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,15,0.8);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .logo span { color: var(--accent2); -webkit-text-fill-color: var(--accent2); }
+
+  .header-actions { display: flex; gap: 12px; align-items: center; }
+
+  .btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(108,99,255,0.3);
+  }
+  .btn-primary:hover { background: #7d75ff; transform: translateY(-1px); box-shadow: 0 4px 24px rgba(108,99,255,0.5); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Dashboard Stats */
+  .dashboard {
+    padding: 28px 32px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    opacity: 0.15;
+    transform: translate(20px, -20px);
+  }
+  .stat-card.danger::before { background: var(--danger); }
+  .stat-card.warn::before { background: var(--warn); }
+  .stat-card.safe::before { background: var(--safe); }
+  .stat-card.info::before { background: var(--accent); }
+
+  .stat-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .stat-card.danger .stat-value { color: var(--danger); }
+  .stat-card.warn .stat-value { color: var(--warn); }
+  .stat-card.safe .stat-value { color: var(--safe); }
+  .stat-card.info .stat-value { color: var(--accent); }
+
+  .stat-sub { font-size: 0.75rem; color: var(--muted); margin-top: 6px; }
+
+  /* Alert Banner */
+  .alert-banner {
+    margin: 0 32px 20px;
+    background: linear-gradient(135deg, rgba(255,71,87,0.15), rgba(247,151,30,0.1));
+    border: 1px solid rgba(255,71,87,0.4);
+    border-radius: 14px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: pulse-border 2s infinite;
+  }
+
+  @keyframes pulse-border {
+    0%, 100% { border-color: rgba(255,71,87,0.4); }
+    50% { border-color: rgba(255,71,87,0.9); }
+  }
+
+  .alert-icon { font-size: 1.3rem; }
+  .alert-text { flex: 1; font-size: 0.85rem; }
+  .alert-text strong { color: var(--danger); }
+
+  /* Main content */
+  .main { display: flex; gap: 0; flex: 1; }
+
+  .task-section { flex: 1; padding: 0 32px 32px; }
+
+  /* Section header */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .filter-tabs { display: flex; gap: 6px; }
+
+  .tab {
+    font-size: 0.7rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 5px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+
+  /* Task list */
+  .task-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .task-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.25s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .task-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .task-card.priority-critical::before { background: var(--danger); }
+  .task-card.priority-high::before { background: var(--warn); }
+  .task-card.priority-medium::before { background: var(--accent); }
+  .task-card.priority-low::before { background: var(--safe); }
+
+  .task-card:hover { border-color: var(--accent); transform: translateX(4px); background: var(--surface2); }
+  .task-card.overdue { border-color: rgba(255,71,87,0.4); background: rgba(255,71,87,0.04); }
+  .task-card.completed { opacity: 0.45; }
+  .task-card.completed .task-title { text-decoration: line-through; }
+
+  /* Checkbox */
+  .task-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+  }
+  .task-check:hover { border-color: var(--accent); }
+  .task-check.checked { background: var(--accent); border-color: var(--accent); }
+  .task-check.checked::after { content: '✓'; color: #fff; font-size: 0.75rem; font-weight: 700; }
+
+  /* Task info */
+  .task-info { flex: 1; min-width: 0; }
+
+  .task-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .task-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+  .task-badge {
+    font-size: 0.65rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 100px;
+    text-transform: uppercase;
+  }
+
+  .badge-critical { background: rgba(255,71,87,0.15); color: var(--danger); border: 1px solid rgba(255,71,87,0.3); }
+  .badge-high { background: rgba(247,151,30,0.15); color: var(--warn); border: 1px solid rgba(247,151,30,0.3); }
+  .badge-medium { background: rgba(108,99,255,0.15); color: var(--accent); border: 1px solid rgba(108,99,255,0.3); }
+  .badge-low { background: rgba(46,213,115,0.15); color: var(--safe); border: 1px solid rgba(46,213,115,0.3); }
+
+  .task-date {
+    font-size: 0.75rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .task-date.overdue { color: var(--danger); font-weight: 600; }
+  .task-date.soon { color: var(--warn); font-weight: 600; }
+
+  /* Score badge */
+  .score-badge {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 800;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .score-90 { background: rgba(255,71,87,0.2); color: var(--danger); }
+  .score-70 { background: rgba(247,151,30,0.2); color: var(--warn); }
+  .score-50 { background: rgba(108,99,255,0.2); color: var(--accent); }
+  .score-30 { background: rgba(46,213,115,0.2); color: var(--safe); }
+
+  /* Buffer indicator */
+  .buffer-bar {
+    width: 80px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .buffer-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s;
+  }
+
+  /* Right sidebar */
+  .sidebar {
+    width: 320px;
+    border-left: 1px solid var(--border);
+    padding: 0 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-section { }
+
+  .sidebar-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 20px 0 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+
+  /* Notification log */
+  .notif-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .notif-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+  .notif-dot.red { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+  .notif-dot.orange { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
+  .notif-dot.blue { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .notif-dot.green { background: var(--safe); }
+
+  .notif-text { font-size: 0.78rem; color: var(--text); line-height: 1.5; }
+  .notif-time { font-size: 0.68rem; color: var(--muted); margin-top: 3px; }
+
+  /* Alert settings */
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .setting-label { font-size: 0.82rem; display: flex; align-items: center; gap: 8px; }
+
+  .toggle {
+    width: 38px;
+    height: 20px;
+    background: var(--border);
+    border-radius: 100px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.2s;
+    border: none;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 14px; height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle.on::after { transform: translateX(18px); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(8px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    width: 480px;
+    max-width: 92vw;
+    transform: translateY(20px);
+    transition: transform 0.25s;
+  }
+  .modal-overlay.show .modal { transform: translateY(0); }
+
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .form-group { margin-bottom: 16px; }
+
+  .form-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 7px;
+  }
+
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-select option { background: var(--surface2); }
+  .form-textarea { resize: vertical; min-height: 80px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .buffer-hint {
+    font-size: 0.72rem;
+    color: var(--accent);
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* Toast notifications */
+  .toast-container {
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 360px;
+  }
+
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    animation: toastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(100%) scale(0.9); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+  }
+
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateX(0); max-height: 100px; }
+    to { opacity: 0; transform: translateX(100%); max-height: 0; padding: 0; margin: 0; }
+  }
+
+  .toast.removing { animation: toastOut 0.3s ease forwards; }
+
+  .toast::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    animation: toastProgress 5s linear forwards;
+  }
+  .toast.urgent::after { background: var(--danger); }
+  .toast.warning::after { background: var(--warn); }
+  .toast.success::after { background: var(--safe); }
+
+  @keyframes toastProgress {
+    from { width: 100%; }
+    to { width: 0%; }
+  }
+
+  .toast-icon { font-size: 1.2rem; flex-shrink: 0; }
+  .toast-content { flex: 1; }
+  .toast-title { font-family: 'Syne', sans-serif; font-size: 0.8rem; font-weight: 700; margin-bottom: 3px; }
+  .toast-body { font-size: 0.75rem; color: var(--muted); line-height: 1.4; }
+
+  .toast-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .toast-close:hover { color: var(--text); }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
+  .empty-text { font-size: 0.85rem; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .dashboard { grid-template-columns: repeat(2, 1fr); }
+    .sidebar { display: none; }
+  }
+  @media (max-width: 600px) {
+    header { padding: 14px 16px; }
+    .dashboard { padding: 16px; }
+    .task-section { padding: 0 16px 24px; }
+  }
+
+  .escalation-badge {
+    font-size: 0.6rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: rgba(255,71,87,0.2);
+    color: var(--danger);
+    border: 1px solid rgba(255,71,87,0.3);
+    animation: flash 1s infinite;
+  }
+  @keyframes flash { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .snooze-btn {
+    font-size: 0.68rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .snooze-btn:hover { border-color: var(--warn); color: var(--warn); }
+
+  /* ===== GOOGLE CALENDAR INTEGRATION ===== */
+  .gcal-btn {
+    font-size: 0.68rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(66,133,244,0.4);
+    background: rgba(66,133,244,0.1);
+    color: #4285f4;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .gcal-btn:hover { background: rgba(66,133,244,0.2); border-color: #4285f4; }
+  .gcal-btn.synced { border-color: rgba(52,168,83,0.4); background: rgba(52,168,83,0.1); color: #34a853; }
+
+  /* Google Connect Banner */
+  .gcal-connect-bar {
+    margin: 0 32px 16px;
+    background: linear-gradient(135deg, rgba(66,133,244,0.12), rgba(52,168,83,0.08));
+    border: 1px solid rgba(66,133,244,0.35);
+    border-radius: 14px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .gcal-logo {
+    width: 32px; height: 32px;
+    background: white;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .gcal-connect-text { flex: 1; font-size: 0.82rem; line-height: 1.5; }
+  .gcal-connect-text strong { color: #4285f4; }
+  .gcal-connect-text .gcal-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+  .btn-gcal {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    background: #4285f4;
+    color: white;
+    box-shadow: 0 2px 12px rgba(66,133,244,0.35);
+  }
+  .btn-gcal:hover { background: #3574e2; transform: translateY(-1px); }
+  .btn-gcal.connected { background: #34a853; box-shadow: 0 2px 12px rgba(52,168,83,0.35); }
+  .btn-gcal.connected:hover { background: #2d9249; }
+
+  /* Calendar Modal */
+  .cal-modal { max-width: 540px; }
+
+  .cal-account-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+  }
+  .cal-avatar {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .cal-account-info { flex: 1; }
+  .cal-account-name { font-size: 0.88rem; font-weight: 600; }
+  .cal-account-email { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
+  .cal-status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--safe);
+    box-shadow: 0 0 6px var(--safe);
+  }
+
+  .cal-section-label {
+    font-size: 0.7rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .cal-task-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; max-height: 240px; overflow-y: auto; }
+
+  .cal-task-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.2s;
+  }
+  .cal-task-item:hover { border-color: rgba(66,133,244,0.4); }
+
+  .cal-task-check {
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    border: 2px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .cal-task-check.checked { background: #4285f4; border-color: #4285f4; }
+  .cal-task-check.checked::after { content: '✓'; color: white; font-size: 0.65rem; font-weight: 700; }
+
+  .cal-task-name { flex: 1; font-size: 0.82rem; }
+  .cal-task-date { font-size: 0.7rem; color: var(--muted); }
+  .cal-task-badge { font-size: 0.6rem; }
+
+  .cal-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .cal-option-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .cal-option-label { font-size: 0.8rem; color: var(--text); }
+
+  /* Sync animation */
+  .syncing-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(12px);
+    z-index: 400;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .syncing-overlay.show { opacity: 1; pointer-events: all; }
+
+  .sync-spinner {
+    width: 56px; height: 56px;
+    border: 3px solid rgba(66,133,244,0.2);
+    border-top-color: #4285f4;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .sync-steps { display: flex; flex-direction: column; gap: 10px; min-width: 260px; }
+  .sync-step {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 0.82rem; color: var(--muted);
+    transition: color 0.3s;
+  }
+  .sync-step.active { color: var(--text); }
+  .sync-step.done { color: var(--safe); }
+  .sync-step-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  .sync-step.active .sync-step-dot { background: #4285f4; box-shadow: 0 0 8px #4285f4; }
+  .sync-step.done .sync-step-dot { background: var(--safe); }
+
+  /* Calendar mini view in sidebar */
+  .mini-cal { }
+  .mini-cal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .mini-cal-month {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .mini-cal-nav {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 0.9rem; padding: 2px 6px;
+    border-radius: 4px; transition: color 0.15s;
+  }
+  .mini-cal-nav:hover { color: var(--accent); }
+
+  .mini-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+  .mini-cal-day-label {
+    font-size: 0.62rem;
+    font-family: 'Syne', sans-serif;
+    color: var(--muted);
+    text-align: center;
+    padding: 4px 0;
+    text-transform: uppercase;
+  }
+  .mini-cal-day {
+    font-size: 0.72rem;
+    text-align: center;
+    padding: 5px 2px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+    color: var(--muted);
+  }
+  .mini-cal-day:hover { background: var(--surface2); color: var(--text); }
+  .mini-cal-day.today { background: rgba(108,99,255,0.2); color: var(--accent); font-weight: 700; }
+  .mini-cal-day.has-task::after {
+    content: '';
+    position: absolute;
+    bottom: 2px; left: 50%; transform: translateX(-50%);
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: #4285f4;
+  }
+  .mini-cal-day.has-overdue::after { background: var(--danger); }
+  .mini-cal-day.empty { cursor: default; }
+
+  .gcal-synced-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .gcal-synced-item {
+    font-size: 0.74rem;
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px;
+    background: var(--surface2);
+    border-radius: 8px;
+    border-left: 3px solid #4285f4;
+  }
+  .gcal-synced-item.overdue { border-left-color: var(--danger); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Header -->
+  <header>
+    <div class="logo">TASK<span>FLOW</span></div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" onclick="runDemoAlerts()">🔔 アラートデモ</button>
+      <button class="btn btn-ghost" id="gcal-header-btn" onclick="openCalModal()" style="border-color:rgba(66,133,244,0.4);color:#4285f4">📅 Googleカレンダー連携</button>
+      <button class="btn btn-primary" onclick="openModal()">＋ タスク追加</button>
+    </div>
+  </header>
+
+  <!-- Stats Dashboard -->
+  <div class="dashboard" id="dashboard">
+    <div class="stat-card danger">
+      <div class="stat-label">🚨 期限超過</div>
+      <div class="stat-value" id="count-overdue">0</div>
+      <div class="stat-sub">即時対応が必要</div>
+    </div>
+    <div class="stat-card warn">
+      <div class="stat-label">⚡ 直近3日以内</div>
+      <div class="stat-value" id="count-soon">0</div>
+      <div class="stat-sub">要注意タスク</div>
+    </div>
+    <div class="stat-card info">
+      <div class="stat-label">📋 未完了合計</div>
+      <div class="stat-value" id="count-pending">0</div>
+      <div class="stat-sub">スコア順に整理</div>
+    </div>
+    <div class="stat-card safe">
+      <div class="stat-label">✅ 完了済み</div>
+      <div class="stat-value" id="count-done">0</div>
+      <div class="stat-sub">今週の達成</div>
+    </div>
+  </div>
+
+  <!-- Google Calendar Connect Bar -->
+  <div class="gcal-connect-bar" id="gcal-connect-bar">
+    <div class="gcal-logo">📅</div>
+    <div class="gcal-connect-text">
+      <strong>Googleカレンダー</strong> と連携してタスクを自動登録・アラート通知<br>
+      <span class="gcal-sub">Pixel 7（Android）のカレンダーアプリにもリマインダーが届きます</span>
+    </div>
+    <button class="btn-gcal" id="gcal-connect-btn" onclick="startGCalConnect()">接続する</button>
+  </div>
+
+  <!-- Alert Banner -->
+  <div class="alert-banner" id="alert-banner" style="display:none">
+    <div class="alert-icon">🚨</div>
+    <div class="alert-text" id="alert-text"></div>
+    <button class="snooze-btn" onclick="snoozeMainAlert()">1時間スヌーズ</button>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="task-section">
+      <div class="section-header">
+        <div class="section-title">
+          <span>📌</span> タスク一覧（優先度スコア順）
+        </div>
+        <div class="filter-tabs">
+          <button class="tab active" onclick="filterTasks('all', this)">すべて</button>
+          <button class="tab" onclick="filterTasks('pending', this)">未完了</button>
+          <button class="tab" onclick="filterTasks('overdue', this)">期限超過</button>
+          <button class="tab" onclick="filterTasks('done', this)">完了</button>
+        </div>
+      </div>
+      <div class="task-list" id="task-list">
+        <div class="empty">
+          <div class="empty-icon">📭</div>
+          <div class="empty-text">タスクがありません。「＋ タスク追加」から登録してください。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">🔔 アラート通知ログ</div>
+        <div id="notif-log">
+          <div style="font-size:0.78rem;color:var(--muted);text-align:center;padding:20px 0">通知はまだありません</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">📅 Googleカレンダー</div>
+        <div id="gcal-sidebar-disconnected">
+          <div style="font-size:0.78rem;color:var(--muted);text-align:center;padding:16px 0;line-height:1.7">
+            接続すると、タスクが<br>カレンダーに自動登録されます
+          </div>
+          <button class="btn-gcal" style="width:100%;justify-content:center;display:flex" onclick="startGCalConnect()">📅 接続する</button>
+        </div>
+        <div id="gcal-sidebar-connected" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--safe);box-shadow:0 0 6px var(--safe)"></div>
+            <span style="font-size:0.75rem;color:var(--safe);font-weight:600">接続済み</span>
+            <span style="font-size:0.7rem;color:var(--muted);margin-left:auto" id="gcal-account-display"></span>
+          </div>
+          <div class="mini-cal" id="mini-cal"></div>
+          <div style="margin-top:12px">
+            <div style="font-size:0.68rem;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">同期済みタスク</div>
+            <div class="gcal-synced-list" id="gcal-synced-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">⚙️ アラート設定</div>
+        <div class="setting-row">
+          <div class="setting-label">🖥️ 画面内ポップアップ</div>
+          <button class="toggle on" id="toggle-popup" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">📧 メール通知</div>
+          <button class="toggle on" id="toggle-email" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">📱 スマホプッシュ</div>
+          <button class="toggle on" id="toggle-push" onclick="requestPushPermission(this)"></button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">📊 ダッシュボード警告</div>
+          <button class="toggle on" id="toggle-dashboard" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="setting-row" style="border:none">
+          <div class="setting-label">🔁 段階的リマインダー</div>
+          <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">📐 バッファ自動設定</div>
+        <div style="font-size:0.78rem;color:var(--muted);line-height:1.7">
+          重要度に応じて自動的に仮締切を設定します：<br>
+          <span style="color:var(--danger)">●</span> 重要 → <strong style="color:var(--text)">3日前</strong>に警告開始<br>
+          <span style="color:var(--warn)">●</span> 高 → <strong style="color:var(--text)">2日前</strong>に警告開始<br>
+          <span style="color:var(--accent)">●</span> 中 → <strong style="color:var(--text)">1日前</strong>に警告開始<br>
+          <span style="color:var(--safe)">●</span> 低 → <strong style="color:var(--text)">当日</strong>に警告開始
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Add Task Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title">📝 新規タスク登録</div>
+    <div class="form-group">
+      <label class="form-label">タスク名</label>
+      <input type="text" class="form-input" id="task-title-input" placeholder="例: 月次報告書を提出する">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">期限日</label>
+        <input type="date" class="form-input" id="task-due">
+      </div>
+      <div class="form-group">
+        <label class="form-label">優先度</label>
+        <select class="form-select" id="task-priority" onchange="updateBufferHint()">
+          <option value="critical">🔴 重要（Critical）</option>
+          <option value="high">🟠 高（High）</option>
+          <option value="medium" selected>🔵 中（Medium）</option>
+          <option value="low">🟢 低（Low）</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">担当者 / 関係者</label>
+      <input type="text" class="form-input" id="task-assignee" placeholder="例: 田中部長、営業チーム">
+    </div>
+    <div class="form-group">
+      <label class="form-label">メモ</label>
+      <textarea class="form-textarea" id="task-memo" placeholder="背景・詳細など"></textarea>
+    </div>
+    <div class="buffer-hint" id="buffer-hint">⏰ 優先度「中」のため、期限の<strong>1日前</strong>から段階的アラートを自動設定します</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="addTask()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+let tasks = [];
+let notifLog = [];
+let currentFilter = 'all';
+let snoozedUntil = null;
+
+const PRIORITY_SCORE = { critical: 100, high: 75, medium: 45, low: 20 };
+const PRIORITY_LABEL = { critical: '重要', high: '高', medium: '中', low: '低' };
+const BUFFER_DAYS = { critical: 3, high: 2, medium: 1, low: 0 };
+
+// ===== SCORE CALCULATION =====
+function calcScore(task) {
+  if (task.completed) return 0;
+  const now = new Date();
+  const due = new Date(task.due);
+  const diffDays = (due - now) / (1000 * 60 * 60 * 24);
+  const urgency = diffDays < 0 ? 50 : diffDays < 1 ? 40 : diffDays < 3 ? 25 : diffDays < 7 ? 10 : 0;
+  return PRIORITY_SCORE[task.priority] + urgency;
+}
+
+function getScoreClass(score) {
+  if (score >= 90) return 'score-90';
+  if (score >= 70) return 'score-70';
+  if (score >= 50) return 'score-50';
+  return 'score-30';
+}
+
+function getDaysLeft(dueStr) {
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  const due = new Date(dueStr);
+  due.setHours(0,0,0,0);
+  return Math.round((due - now) / (1000 * 60 * 60 * 24));
+}
+
+function getBufferFill(task) {
+  const bufferDays = BUFFER_DAYS[task.priority];
+  const daysLeft = getDaysLeft(task.due);
+  if (daysLeft < 0) return 100;
+  const start = bufferDays + 7;
+  const pct = Math.max(0, Math.min(100, 100 - (daysLeft / start) * 100));
+  return pct;
+}
+
+function getBufferColor(pct) {
+  if (pct >= 90) return 'var(--danger)';
+  if (pct >= 60) return 'var(--warn)';
+  if (pct >= 30) return 'var(--accent)';
+  return 'var(--safe)';
+}
+
+// ===== RENDER =====
+function renderTasks() {
+  const list = document.getElementById('task-list');
+  let filtered = [...tasks];
+
+  if (currentFilter === 'pending') filtered = filtered.filter(t => !t.completed);
+  else if (currentFilter === 'overdue') filtered = filtered.filter(t => !t.completed && getDaysLeft(t.due) < 0);
+  else if (currentFilter === 'done') filtered = filtered.filter(t => t.completed);
+
+  // Sort by score descending
+  filtered.sort((a, b) => calcScore(b) - calcScore(a));
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">該当するタスクはありません</div></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(task => {
+    const score = calcScore(task);
+    const daysLeft = getDaysLeft(task.due);
+    const isOverdue = !task.completed && daysLeft < 0;
+    const isSoon = !task.completed && daysLeft >= 0 && daysLeft <= 3;
+    const bufferPct = getBufferFill(task);
+    const bufferColor = getBufferColor(bufferPct);
+
+    let dateLabel, dateClass;
+    if (isOverdue) {
+      dateLabel = `⚠️ ${Math.abs(daysLeft)}日超過`;
+      dateClass = 'overdue';
+    } else if (daysLeft === 0) {
+      dateLabel = '⚡ 本日期限';
+      dateClass = 'soon';
+    } else if (isSoon) {
+      dateLabel = `⏰ あと${daysLeft}日`;
+      dateClass = 'soon';
+    } else {
+      dateLabel = `📅 ${task.due}（あと${daysLeft}日）`;
+      dateClass = '';
+    }
+
+    const escalating = task.snoozeCount >= 2;
+
+    return `
+    <div class="task-card priority-${task.priority} ${isOverdue ? 'overdue' : ''} ${task.completed ? 'completed' : ''}" id="task-${task.id}">
+      <div class="task-check ${task.completed ? 'checked' : ''}" onclick="toggleTask('${task.id}')"></div>
+      <div class="task-info">
+        <div class="task-title">${task.title}</div>
+        <div class="task-meta">
+          <span class="task-badge badge-${task.priority}">${PRIORITY_LABEL[task.priority]}</span>
+          <span class="task-date ${dateClass}">${dateLabel}</span>
+          ${task.assignee ? `<span class="task-date">👤 ${task.assignee}</span>` : ''}
+          ${escalating ? `<span class="escalation-badge">🔴 エスカレーション</span>` : ''}
+        </div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+          <div class="buffer-bar"><div class="buffer-fill" style="width:${bufferPct}%;background:${bufferColor}"></div></div>
+          <span style="font-size:0.68rem;color:var(--muted)">緊迫度 ${Math.round(bufferPct)}%</span>
+          ${!task.completed ? `<button class="snooze-btn" onclick="snoozeTask('${task.id}')">スヌーズ${task.snoozeCount > 0 ? ` (${task.snoozeCount}回)` : ''}</button>` : ''}
+          ${gcalConnected && !task.completed ? `<button class="gcal-btn ${task.gcalSynced ? 'synced' : ''}" onclick="syncSingleTask('${task.id}')">${task.gcalSynced ? '📅 同期済' : '📅 カレンダーへ'}</button>` : ''}
+          <button class="snooze-btn" onclick="deleteTask('${task.id}')" style="color:var(--danger);border-color:rgba(255,71,87,0.3)">削除</button>
+        </div>
+      </div>
+      <div class="score-badge ${getScoreClass(score)}">${score}</div>
+    </div>`;
+  }).join('');
+
+  updateStats();
+  checkAlertBanner();
+}
+
+function updateStats() {
+  const overdue = tasks.filter(t => !t.completed && getDaysLeft(t.due) < 0).length;
+  const soon = tasks.filter(t => !t.completed && getDaysLeft(t.due) >= 0 && getDaysLeft(t.due) <= 3).length;
+  const pending = tasks.filter(t => !t.completed).length;
+  const done = tasks.filter(t => t.completed).length;
+
+  document.getElementById('count-overdue').textContent = overdue;
+  document.getElementById('count-soon').textContent = soon;
+  document.getElementById('count-pending').textContent = pending;
+  document.getElementById('count-done').textContent = done;
+}
+
+function checkAlertBanner() {
+  const overdue = tasks.filter(t => !t.completed && getDaysLeft(t.due) < 0);
+  const banner = document.getElementById('alert-banner');
+  const text = document.getElementById('alert-text');
+  if (overdue.length > 0 && !snoozedUntil) {
+    banner.style.display = 'flex';
+    text.innerHTML = `<strong>${overdue.length}件</strong>のタスクが期限超過です。`;
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+// ===== ACTIONS =====
+function toggleTask(id) {
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+  task.completed = !task.completed;
+  if (task.completed) {
+    addNotif('green', `✅ 完了`, `「${task.title}」を完了しました`);
+    showToast('✅', '完了!', `「${task.title}」を完了しました`, 'success');
+  }
+  renderTasks();
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  renderTasks();
+}
+
+function snoozeTask(id) {
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+  task.snoozeCount = (task.snoozeCount || 0) + 1;
+  const hours = task.snoozeCount >= 2 ? 0.5 : 1;
+  if (task.snoozeCount >= 2) {
+    showToast('🚨', 'エスカレーション!', `「${task.title}」のスヌーズ回数が多いため通知頻度を上げます`, 'urgent');
+    addNotif('red', '🚨 エスカレーション', `「${task.title}」は${task.snoozeCount}回スヌーズされました`);
+  } else {
+    showToast('😴', `スヌーズ設定`, `「${task.title}」を${hours}時間後に再通知します`, 'warning');
+    addNotif('orange', '😴 スヌーズ', `「${task.title}」を${hours}時間スヌーズしました`);
+  }
+  renderTasks();
+}
+
+function snoozeMainAlert() {
+  snoozedUntil = Date.now() + 3600000;
+  document.getElementById('alert-banner').style.display = 'none';
+  showToast('😴', 'スヌーズ設定', 'ダッシュボードアラートを1時間停止しました', 'warning');
+  setTimeout(() => { snoozedUntil = null; checkAlertBanner(); }, 3600000);
+}
+
+// ===== MODAL =====
+function openModal() {
+  const today = new Date();
+  today.setDate(today.getDate() + 3);
+  document.getElementById('task-due').value = today.toISOString().split('T')[0];
+  document.getElementById('modal-overlay').classList.add('show');
+  setTimeout(() => document.getElementById('task-title-input').focus(), 300);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+
+function updateBufferHint() {
+  const p = document.getElementById('task-priority').value;
+  const days = BUFFER_DAYS[p];
+  const hint = document.getElementById('buffer-hint');
+  const msgs = {
+    critical: `優先度「重要」のため、期限の<strong>3日前</strong>から段階的アラートを自動設定します`,
+    high: `優先度「高」のため、期限の<strong>2日前</strong>から段階的アラートを自動設定します`,
+    medium: `優先度「中」のため、期限の<strong>1日前</strong>から段階的アラートを自動設定します`,
+    low: `優先度「低」のため、<strong>当日</strong>にアラートを設定します`
+  };
+  hint.innerHTML = `⏰ ${msgs[p]}`;
+}
+
+function addTask() {
+  const title = document.getElementById('task-title-input').value.trim();
+  const due = document.getElementById('task-due').value;
+  const priority = document.getElementById('task-priority').value;
+  const assignee = document.getElementById('task-assignee').value.trim();
+  const memo = document.getElementById('task-memo').value.trim();
+
+  if (!title) { showToast('⚠️', '入力エラー', 'タスク名を入力してください', 'warning'); return; }
+  if (!due) { showToast('⚠️', '入力エラー', '期限日を選択してください', 'warning'); return; }
+
+  const task = {
+    id: Date.now().toString(),
+    title,
+    due,
+    priority,
+    assignee,
+    memo,
+    completed: false,
+    snoozeCount: 0,
+    createdAt: new Date().toISOString()
+  };
+
+  tasks.push(task);
+  closeModal();
+  renderTasks();
+
+  const bufferDays = BUFFER_DAYS[priority];
+  showToast('📝', 'タスク追加', `「${title}」を登録。期限${bufferDays > 0 ? bufferDays + '日前' : '当日'}からアラート開始`, 'success');
+  addNotif('blue', '📝 タスク追加', `「${title}」を登録しました`);
+
+  // Clear form
+  document.getElementById('task-title-input').value = '';
+  document.getElementById('task-assignee').value = '';
+  document.getElementById('task-memo').value = '';
+}
+
+// ===== TOAST =====
+function showToast(icon, title, body, type = '') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `
+    <div class="toast-icon">${icon}</div>
+    <div class="toast-content">
+      <div class="toast-title">${title}</div>
+      <div class="toast-body">${body}</div>
+    </div>
+    <button class="toast-close" onclick="removeToast(this.parentElement)">✕</button>`;
+  container.appendChild(toast);
+  setTimeout(() => removeToast(toast), 5200);
+}
+
+function removeToast(toast) {
+  if (!toast || !toast.parentElement) return;
+  toast.classList.add('removing');
+  setTimeout(() => toast.remove(), 300);
+}
+
+// ===== NOTIFICATION LOG =====
+function addNotif(color, title, text) {
+  const log = document.getElementById('notif-log');
+  const now = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+  const item = document.createElement('div');
+  item.className = 'notif-item';
+  item.innerHTML = `
+    <div class="notif-dot ${color}"></div>
+    <div>
+      <div class="notif-text"><strong>${title}</strong> — ${text}</div>
+      <div class="notif-time">${now}</div>
+    </div>`;
+  if (log.children.length === 1 && log.children[0].style.textAlign === 'center') log.innerHTML = '';
+  log.insertBefore(item, log.firstChild);
+  while (log.children.length > 8) log.removeChild(log.lastChild);
+}
+
+// ===== PUSH NOTIFICATION =====
+function requestPushPermission(btn) {
+  btn.classList.toggle('on');
+  if (btn.classList.contains('on') && 'Notification' in window) {
+    Notification.requestPermission().then(perm => {
+      if (perm === 'granted') {
+        showToast('📱', 'プッシュ通知 有効', 'スマホ・ブラウザへの通知を許可しました', 'success');
+        addNotif('green', '📱 プッシュ通知', 'ブラウザ通知を許可しました');
+      } else {
+        showToast('⚠️', '通知が拒否されました', 'ブラウザの設定から許可してください', 'warning');
+        btn.classList.remove('on');
+      }
+    });
+  }
+}
+
+function sendPushNotification(title, body) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('TASKFLOW — ' + title, { body, icon: '📋' });
+  }
+}
+
+// ===== DEMO =====
+function runDemoAlerts() {
+  const demos = [
+    { delay: 0, fn: () => { showToast('🚨', '段階的アラート [3日前]', '「契約書レビュー」の期限まで3日です', 'urgent'); addNotif('red', '🚨 3日前アラート', '「契約書レビュー」期限接近'); sendPushNotification('3日前アラート', '「契約書レビュー」の期限まで3日です'); } },
+    { delay: 1500, fn: () => { showToast('⚡', '段階的アラート [1日前]', '「月次報告書」の期限は明日です！', 'warning'); addNotif('orange', '⚡ 1日前アラート', '「月次報告書」明日が期限'); } },
+    { delay: 3000, fn: () => { showToast('📊', 'スコアアップ', '未対応タスクの優先度スコアが上昇しました', ''); addNotif('blue', '📊 スコア更新', '優先度スコアが自動更新されました'); } },
+    { delay: 4500, fn: () => { showToast('🔁', 'エスカレーション通知', '「決済申請」が2回スヌーズ。通知頻度を強化します', 'urgent'); addNotif('red', '🔁 エスカレーション', '「決済申請」を2回スヌーズ'); } },
+    { delay: 6000, fn: () => { showToast('⏰', 'バッファ期限アラート', '「重要」タスクのバッファ期限（3日前）に達しました', 'warning'); addNotif('orange', '⏰ バッファ期限', '仮締切ラインに達しました'); } },
+  ];
+  demos.forEach(d => setTimeout(d.fn, d.delay));
+}
+
+// ===== FILTER =====
+function filterTasks(type, btn) {
+  currentFilter = type;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderTasks();
+}
+
+// ===== SAMPLE DATA =====
+function loadSamples() {
+  const today = new Date();
+  const fmt = d => { const x = new Date(today); x.setDate(today.getDate() + d); return x.toISOString().split('T')[0]; };
+
+  tasks = [
+    { id: '1', title: '月次報告書の提出', due: fmt(1), priority: 'critical', assignee: '部長・経理チーム', memo: '', completed: false, snoozeCount: 0 },
+    { id: '2', title: 'クライアントへの契約書レビュー回答', due: fmt(-1), priority: 'critical', assignee: '田中部長', memo: '', completed: false, snoozeCount: 2 },
+    { id: '3', title: '決済システム障害報告書の作成', due: fmt(2), priority: 'high', assignee: 'ITチーム', memo: '', completed: false, snoozeCount: 0 },
+    { id: '4', title: '新入社員オリエンテーション資料の更新', due: fmt(5), priority: 'medium', assignee: 'HRチーム', memo: '', completed: false, snoozeCount: 0 },
+    { id: '5', title: '社内勉強会の日程調整', due: fmt(10), priority: 'low', assignee: '', memo: '', completed: false, snoozeCount: 0 },
+    { id: '6', title: '先月の議事録を整理してアーカイブ', due: fmt(-3), priority: 'medium', assignee: '', memo: '', completed: true, snoozeCount: 0 },
+  ];
+
+  renderTasks();
+  setTimeout(() => {
+    showToast('👋', 'サンプルデータを読み込みました', '期限超過タスクを含む6件のデモが確認できます', '');
+    addNotif('orange', '⚠️ 期限超過検出', '2件のタスクが期限超過です');
+    addNotif('red', '🚨 高スコア警告', '「契約書レビュー」のスコアが最大値に達しています');
+  }, 500);
+}
+
+// ===== PERIODIC CHECK (simulates background alert monitor) =====
+setInterval(() => {
+  if (tasks.length === 0) return;
+  const overdue = tasks.filter(t => !t.completed && getDaysLeft(t.due) < 0);
+  if (overdue.length > 0 && !snoozedUntil) checkAlertBanner();
+}, 60000);
+
+// ===== INIT =====
+window.addEventListener('load', () => {
+  updateBufferHint();
+  loadSamples();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') addTask();
+});
+</script>
+<!-- Google Calendar Modal -->
+<div class="modal-overlay" id="cal-modal-overlay" onclick="if(event.target===this)closeCalModal()">
+  <div class="modal cal-modal">
+    <div id="cal-view-connect">
+      <div class="modal-title">📅 Googleカレンダー連携</div>
+      <div style="font-size:0.83rem;color:var(--muted);margin-bottom:20px;line-height:1.7">
+        Googleアカウントで認証することで、TASKFLOWのタスクが<strong style="color:var(--text)">Googleカレンダーに自動登録</strong>されます。<br>
+        Pixel 7のカレンダーアプリ・Googleアシスタントからも通知が届きます。
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface2);border-radius:10px">
+          <span style="font-size:1.2rem">📆</span>
+          <div style="font-size:0.8rem;line-height:1.5"><strong>タスクを予定として自動登録</strong><br><span style="color:var(--muted)">期限日にイベントとしてカレンダーへ追加</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface2);border-radius:10px">
+          <span style="font-size:1.2rem">🔔</span>
+          <div style="font-size:0.8rem;line-height:1.5"><strong>段階的リマインダーを同期</strong><br><span style="color:var(--muted)">バッファ設定に従いカレンダーからも通知</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface2);border-radius:10px">
+          <span style="font-size:1.2rem">📱</span>
+          <div style="font-size:0.8rem;line-height:1.5"><strong>Pixel 7と即時同期</strong><br><span style="color:var(--muted)">Androidのカレンダーウィジェットにも反映</span></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeCalModal()">キャンセル</button>
+        <button class="btn-gcal" onclick="demoGoogleAuth()" style="padding:10px 24px;font-size:0.82rem">
+          🔐 Googleアカウントで認証
+        </button>
+      </div>
+    </div>
+
+    <div id="cal-view-connected" style="display:none">
+      <div class="modal-title">📅 カレンダー同期設定</div>
+      <div class="cal-account-box">
+        <div class="cal-avatar">👤</div>
+        <div class="cal-account-info">
+          <div class="cal-account-name" id="cal-modal-name">—</div>
+          <div class="cal-account-email" id="cal-modal-email">—</div>
+        </div>
+        <div class="cal-status-dot"></div>
+      </div>
+
+      <div class="cal-section-label">同期するタスクを選択</div>
+      <div class="cal-task-list" id="cal-task-checklist"></div>
+
+      <div class="cal-section-label">同期オプション</div>
+      <div class="cal-options">
+        <div class="cal-option-row">
+          <div class="cal-option-label">📅 期限日に終日イベントとして登録</div>
+          <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="cal-option-row">
+          <div class="cal-option-label">🔔 バッファ期限でリマインダー追加</div>
+          <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="cal-option-row">
+          <div class="cal-option-label">🟥 優先度「重要」は赤色で表示</div>
+          <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+        </div>
+        <div class="cal-option-row" style="border:none">
+          <div class="cal-option-label">✅ 完了時にカレンダーから削除</div>
+          <button class="toggle" onclick="this.classList.toggle('on')"></button>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="disconnectGCal()">接続解除</button>
+        <button class="btn-gcal connected" onclick="doSync()" style="padding:10px 24px;font-size:0.82rem">
+          🔄 今すぐ同期する
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sync Overlay -->
+<div class="syncing-overlay" id="syncing-overlay">
+  <div class="sync-spinner"></div>
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--text)">Googleカレンダーと同期中...</div>
+  <div class="sync-steps" id="sync-steps">
+    <div class="sync-step" id="step-1"><div class="sync-step-dot"></div>Googleアカウントを確認</div>
+    <div class="sync-step" id="step-2"><div class="sync-step-dot"></div>タスクデータを変換</div>
+    <div class="sync-step" id="step-3"><div class="sync-step-dot"></div>カレンダーに予定を登録</div>
+    <div class="sync-step" id="step-4"><div class="sync-step-dot"></div>リマインダーを設定</div>
+    <div class="sync-step" id="step-5"><div class="sync-step-dot"></div>Pixel 7と同期完了</div>
+  </div>
+</div>
+
+<script>
+// ===== GOOGLE CALENDAR STATE =====
+let gcalConnected = false;
+let gcalEmail = '';
+let gcalName = '';
+let syncedTaskIds = new Set();
+let calViewMonth = new Date();
+
+// ===== DEMO AUTH =====
+function demoGoogleAuth() {
+  closeCalModal();
+  // Simulate OAuth popup
+  showToast('🔐', 'Googleアカウント認証中...', 'ポップアップで認証画面を開いています', '');
+  setTimeout(() => {
+    gcalConnected = true;
+    gcalEmail = 'yourname@gmail.com';
+    gcalName = 'あなたの名前';
+    onGCalConnected();
+  }, 1800);
+}
+
+function onGCalConnected() {
+  // Update UI
+  document.getElementById('gcal-connect-bar').style.display = 'none';
+
+  const btn = document.getElementById('gcal-header-btn');
+  btn.style.background = 'rgba(52,168,83,0.15)';
+  btn.style.borderColor = 'rgba(52,168,83,0.5)';
+  btn.style.color = '#34a853';
+  btn.textContent = '📅 カレンダー接続済み';
+
+  document.getElementById('gcal-sidebar-disconnected').style.display = 'none';
+  document.getElementById('gcal-sidebar-connected').style.display = 'block';
+  document.getElementById('gcal-account-display').textContent = gcalEmail;
+
+  renderMiniCal();
+  renderSyncedList();
+
+  showToast('✅', 'Googleカレンダー接続完了！', `${gcalEmail} と連携しました`, 'success');
+  addNotif('green', '📅 カレンダー接続', `${gcalEmail} で認証完了`);
+
+  // Auto-sync all pending tasks
+  setTimeout(() => openCalModalConnected(), 800);
+}
+
+function disconnectGCal() {
+  gcalConnected = false;
+  syncedTaskIds.clear();
+  closeCalModal();
+  document.getElementById('gcal-connect-bar').style.display = 'flex';
+
+  const btn = document.getElementById('gcal-header-btn');
+  btn.style.background = '';
+  btn.style.borderColor = 'rgba(66,133,244,0.4)';
+  btn.style.color = '#4285f4';
+  btn.textContent = '📅 Googleカレンダー連携';
+
+  document.getElementById('gcal-sidebar-disconnected').style.display = 'block';
+  document.getElementById('gcal-sidebar-connected').style.display = 'none';
+
+  showToast('⚠️', '接続解除しました', 'Googleカレンダーとの連携を解除しました', 'warning');
+  addNotif('orange', '📅 接続解除', 'Googleカレンダー連携を解除しました');
+  renderTasks();
+}
+
+// ===== CAL MODAL =====
+function openCalModal() {
+  if (gcalConnected) {
+    openCalModalConnected();
+  } else {
+    document.getElementById('cal-view-connect').style.display = 'block';
+    document.getElementById('cal-view-connected').style.display = 'none';
+    document.getElementById('cal-modal-overlay').classList.add('show');
+  }
+}
+
+function openCalModalConnected() {
+  document.getElementById('cal-view-connect').style.display = 'none';
+  document.getElementById('cal-view-connected').style.display = 'block';
+  document.getElementById('cal-modal-name').textContent = gcalName;
+  document.getElementById('cal-modal-email').textContent = gcalEmail;
+
+  // Build task checklist
+  const pending = tasks.filter(t => !t.completed);
+  const list = document.getElementById('cal-task-checklist');
+  if (pending.length === 0) {
+    list.innerHTML = '<div style="font-size:0.78rem;color:var(--muted);text-align:center;padding:16px">未完了のタスクがありません</div>';
+  } else {
+    list.innerHTML = pending.map(t => `
+      <div class="cal-task-item">
+        <div class="cal-task-check ${syncedTaskIds.has(t.id) ? 'checked' : ''}" id="calcheck-${t.id}" onclick="toggleCalCheck('${t.id}')"></div>
+        <div class="cal-task-name">${t.title}</div>
+        <div class="cal-task-date">${t.due}</div>
+        <span class="task-badge badge-${t.priority} cal-task-badge">${PRIORITY_LABEL[t.priority]}</span>
+      </div>`).join('');
+  }
+
+  document.getElementById('cal-modal-overlay').classList.add('show');
+}
+
+function closeCalModal() {
+  document.getElementById('cal-modal-overlay').classList.remove('show');
+}
+
+function toggleCalCheck(id) {
+  const el = document.getElementById(`calcheck-${id}`);
+  if (syncedTaskIds.has(id)) {
+    syncedTaskIds.delete(id);
+    el.classList.remove('checked');
+  } else {
+    syncedTaskIds.add(id);
+    el.classList.add('checked');
+  }
+}
+
+// ===== SYNC =====
+function doSync() {
+  // Select all checked
+  const toSync = tasks.filter(t => !t.completed && syncedTaskIds.has(t.id));
+  if (toSync.length === 0) {
+    // Select all pending if none selected
+    tasks.filter(t => !t.completed).forEach(t => syncedTaskIds.add(t.id));
+  }
+  closeCalModal();
+  runSyncAnimation();
+}
+
+function runSyncAnimation() {
+  const overlay = document.getElementById('syncing-overlay');
+  overlay.classList.add('show');
+  const steps = [1,2,3,4,5];
+  steps.forEach((n, i) => {
+    setTimeout(() => {
+      const el = document.getElementById(`step-${n}`);
+      el.classList.add('active');
+      if (i > 0) document.getElementById(`step-${i}`).classList.remove('active'), document.getElementById(`step-${i}`).classList.add('done');
+    }, i * 700);
+  });
+  setTimeout(() => {
+    document.getElementById('step-5').classList.remove('active');
+    document.getElementById('step-5').classList.add('done');
+    setTimeout(() => {
+      overlay.classList.remove('show');
+      steps.forEach(n => {
+        document.getElementById(`step-${n}`).classList.remove('active','done');
+      });
+      onSyncComplete();
+    }, 600);
+  }, 5 * 700 + 200);
+}
+
+function onSyncComplete() {
+  tasks.filter(t => !t.completed).forEach(t => {
+    syncedTaskIds.add(t.id);
+    t.gcalSynced = true;
+  });
+  renderTasks();
+  renderSyncedList();
+  renderMiniCal();
+  showToast('📅', '同期完了！', `${syncedTaskIds.size}件のタスクをGoogleカレンダーに登録しました`, 'success');
+  addNotif('green', '📅 同期完了', `${syncedTaskIds.size}件をカレンダーに登録`);
+  sendPushNotification('カレンダー同期完了', `${syncedTaskIds.size}件のタスクを登録しました`);
+}
+
+// ===== MINI CALENDAR =====
+function renderMiniCal() {
+  const cal = document.getElementById('mini-cal');
+  const y = calViewMonth.getFullYear();
+  const m = calViewMonth.getMonth();
+  const monthStr = `${y}年${m+1}月`;
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const today = new Date();
+
+  // Build task date map
+  const taskDates = {};
+  tasks.filter(t => !t.completed).forEach(t => {
+    const d = new Date(t.due);
+    if (d.getFullYear() === y && d.getMonth() === m) {
+      const day = d.getDate();
+      const isOverdue = getDaysLeft(t.due) < 0;
+      taskDates[day] = isOverdue ? 'overdue' : 'task';
+    }
+  });
+
+  let html = `
+    <div class="mini-cal-header">
+      <button class="mini-cal-nav" onclick="changeCalMonth(-1)">‹</button>
+      <div class="mini-cal-month">${monthStr}</div>
+      <button class="mini-cal-nav" onclick="changeCalMonth(1)">›</button>
+    </div>
+    <div class="mini-cal-grid">
+      ${['日','月','火','水','木','金','土'].map(d => `<div class="mini-cal-day-label">${d}</div>`).join('')}
+      ${Array(firstDay).fill('<div class="mini-cal-day empty"></div>').join('')}
+      ${Array.from({length: daysInMonth}, (_,i) => {
+        const day = i+1;
+        const isToday = today.getFullYear()===y && today.getMonth()===m && today.getDate()===day;
+        const hasTask = taskDates[day];
+        return `<div class="mini-cal-day ${isToday?'today':''} ${hasTask==='overdue'?'has-overdue':hasTask?'has-task':''}">${day}</div>`;
+      }).join('')}
+    </div>`;
+  cal.innerHTML = html;
+}
+
+function changeCalMonth(dir) {
+  calViewMonth = new Date(calViewMonth.getFullYear(), calViewMonth.getMonth() + dir, 1);
+  renderMiniCal();
+}
+
+function renderSyncedList() {
+  const list = document.getElementById('gcal-synced-list');
+  const synced = tasks.filter(t => syncedTaskIds.has(t.id) && !t.completed).slice(0,5);
+  if (synced.length === 0) {
+    list.innerHTML = '<div style="font-size:0.72rem;color:var(--muted)">同期済みタスクなし</div>';
+    return;
+  }
+  list.innerHTML = synced.map(t => {
+    const isOverdue = getDaysLeft(t.due) < 0;
+    return `<div class="gcal-synced-item ${isOverdue?'overdue':''}">
+      <span style="font-size:0.8rem">${isOverdue?'🔴':'📅'}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.title}</span>
+      <span style="color:var(--muted);flex-shrink:0">${t.due.slice(5)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ===== PATCH renderTasks to show gcal sync button =====
+const _origRenderTasks = renderTasks;
+// We patch gcal button into task cards after render
+const _origRenderTasksInner = window.renderTasks;
+
+function syncSingleTask(id) {
+  const task = tasks.find(t => t.id === id);
+  if (!task || !gcalConnected) return;
+  if (task.gcalSynced) {
+    showToast('📅', '同期済み', `「${task.title}」はすでにカレンダーに登録されています`, '');
+    return;
+  }
+  task.gcalSynced = true;
+  syncedTaskIds.add(id);
+  renderTasks();
+  renderSyncedList();
+  renderMiniCal();
+  const bufferDays = BUFFER_DAYS[task.priority];
+  showToast('📅', 'カレンダーに登録しました', `期限日${bufferDays > 0 ? 'の'+bufferDays+'日前' : '当日'}にリマインダーを設定`, 'success');
+  addNotif('green', '📅 カレンダー登録', `「${task.title}」を${task.due}に追加`);
+}
+</script>
+</body>
+</html>
