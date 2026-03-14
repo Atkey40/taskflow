@@ -7,14 +7,26 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --surface2: #1a1a26;
-    --border: #2a2a3f;
+    --bg: #f5f6fa;
+    --surface: #ffffff;
+    --surface2: #f0f1f8;
+    --border: #dde0ef;
     --accent: #6c63ff;
     --accent2: #ff6b6b;
     --accent3: #43e97b;
     --warn: #f7971e;
+    --text: #1a1a2e;
+    --muted: #8888aa;
+    --danger: #e63946;
+    --safe: #2a9d5c;
+  }
+
+  /* ダークモード */
+  [data-theme="dark"] {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3f;
     --text: #e8e8f0;
     --muted: #6b6b8a;
     --danger: #ff4757;
@@ -53,7 +65,7 @@
     justify-content: space-between;
     padding: 20px 32px;
     border-bottom: 1px solid var(--border);
-    background: rgba(10,10,15,0.8);
+    background: rgba(245,246,250,0.92);
     backdrop-filter: blur(12px);
     position: sticky;
     top: 0;
@@ -375,11 +387,15 @@
   }
 
   /* Notification log */
+  [data-theme="dark"] header {
+    background: rgba(10,10,15,0.8);
+  }
+
   .notif-item {
     display: flex;
     gap: 12px;
     padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid var(--border);
     animation: slideIn 0.3s ease;
   }
 
@@ -408,7 +424,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid var(--border);
   }
 
   .setting-label { font-size: 0.82rem; display: flex; align-items: center; gap: 8px; }
@@ -440,7 +456,7 @@
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.75);
+    background: rgba(0,0,0,0.45);
     backdrop-filter: blur(8px);
     z-index: 200;
     display: flex;
@@ -786,7 +802,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 8px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid var(--border);
   }
   .cal-option-label { font-size: 0.8rem; color: var(--text); }
 
@@ -898,8 +914,138 @@
     border-radius: 8px;
     border-left: 3px solid #4285f4;
   }
-  .gcal-synced-item.overdue { border-left-color: var(--danger); }
-</style>
+  /* ===== テーマ切り替えボタン ===== */
+  .theme-toggle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { border-color: var(--accent); transform: rotate(20deg); }
+
+  /* ===== スマホ対応強化 ===== */
+  @media (max-width: 600px) {
+    header { padding: 12px 14px; gap: 8px; }
+    .header-actions { gap: 6px; }
+    .btn { padding: 7px 12px; font-size: 0.72rem; }
+    /* ヘッダーボタンのテキストを短縮 */
+    .btn-label-long { display: none; }
+    .btn-label-short { display: inline; }
+
+    .dashboard { 
+      padding: 12px 14px; 
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .stat-card { padding: 14px 16px; border-radius: 12px; }
+    .stat-value { font-size: 1.8rem; }
+
+    .task-section { padding: 0 14px 20px; }
+
+    .task-card { padding: 12px 14px; gap: 10px; }
+    .task-title { font-size: 0.85rem; white-space: normal; }
+    .task-meta { gap: 6px; }
+
+    /* タスクアクションボタンを大きく */
+    .snooze-btn, .gcal-btn {
+      padding: 7px 12px;
+      font-size: 0.72rem;
+      min-height: 34px;
+    }
+
+    /* フィルタータブをスクロール可能に */
+    .filter-tabs {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px;
+      flex-wrap: nowrap;
+    }
+    .tab { white-space: nowrap; }
+
+    /* セクションヘッダーを縦並びに */
+    .section-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+    /* サイドバーは非表示 */
+    .sidebar { display: none !important; }
+
+    /* アラートバナーのフォントサイズ調整 */
+    .alert-text { font-size: 0.78rem; }
+
+    /* ＋タスク追加ボタンを画面下部に固定 */
+    .fab {
+      display: flex;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 150;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 1.6rem;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(108,99,255,0.45);
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .fab:hover { transform: scale(1.08); }
+    .btn-add-desktop { display: none; }
+  }
+  @media (min-width: 601px) {
+    .fab { display: none; }
+    .btn-label-long { display: inline; }
+    .btn-label-short { display: none; }
+  }
+
+  /* ボックスシャドウをライト用に */
+  .toast {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  }
+  [data-theme="dark"] .toast {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  /* グリッドの線をライト対応 */
+  [data-theme="dark"] body::before {
+    background-image:
+      linear-gradient(rgba(108,99,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,99,255,0.03) 1px, transparent 1px);
+  }
+  body::before {
+    background-image:
+      linear-gradient(rgba(108,99,255,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,99,255,0.06) 1px, transparent 1px);
+  }
+
+  /* カード影をライト用に */
+  .stat-card {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .task-card {
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  }
+  [data-theme="dark"] .stat-card,
+  [data-theme="dark"] .task-card {
+    box-shadow: none;
+  }
+
+  .gcal-connect-bar { margin: 0 32px 16px; }
+  @media (max-width: 600px) {
+    .gcal-connect-bar { margin: 0 14px 12px; }
+    .alert-banner { margin: 0 14px 14px; }
+  }
 </head>
 <body>
 
@@ -908,11 +1054,14 @@
   <header>
     <div class="logo">TASK<span>FLOW</span></div>
     <div class="header-actions">
-      <button class="btn btn-ghost" onclick="runDemoAlerts()">🔔 アラートデモ</button>
-      <button class="btn btn-ghost" id="gcal-header-btn" onclick="openCalModal()" style="border-color:rgba(66,133,244,0.4);color:#4285f4">📅 Googleカレンダー連携</button>
-      <button class="btn btn-primary" onclick="openModal()">＋ タスク追加</button>
+      <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="テーマ切替">🌙</button>
+      <button class="btn btn-ghost" onclick="runDemoAlerts()">🔔 <span class="btn-label-long">アラートデモ</span><span class="btn-label-short">Demo</span></button>
+      <button class="btn btn-ghost" id="gcal-header-btn" onclick="openCalModal()" style="border-color:rgba(66,133,244,0.4);color:#4285f4">📅 <span class="btn-label-long">Googleカレンダー連携</span><span class="btn-label-short">Cal</span></button>
+      <button class="btn btn-primary btn-add-desktop" onclick="openModal()">＋ タスク追加</button>
     </div>
   </header>
+  <!-- スマホ用FABボタン -->
+  <button class="fab" onclick="openModal()">＋</button>
 
   <!-- Stats Dashboard -->
   <div class="dashboard" id="dashboard">
@@ -1444,6 +1593,32 @@ setInterval(() => {
   if (overdue.length > 0 && !snoozedUntil) checkAlertBanner();
 }, 60000);
 
+// ===== テーマ切り替え =====
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme');
+    document.getElementById('theme-btn').textContent = '🌙';
+    localStorage.setItem('theme', 'light');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.getElementById('theme-btn').textContent = '☀️';
+    localStorage.setItem('theme', 'dark');
+  }
+}
+
+// ページ読み込み時にテーマを復元
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('theme-btn');
+      if (btn) btn.textContent = '☀️';
+    });
+  }
+})();
+
 // ===== INIT =====
 window.addEventListener('load', () => {
   updateBufferHint();
@@ -1551,17 +1726,84 @@ let gcalName = '';
 let syncedTaskIds = new Set();
 let calViewMonth = new Date();
 
-// ===== DEMO AUTH =====
+
+const GCAL_CLIENT_ID = '231430423091-7gmeqh3ve6us8cng8b2h3lhhhfqv6uvf.apps.googleusercontent.com';
+const GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.events';
+let tokenClient = null;
+let gapiInited = false;
+let gisInited = false;
+
+function gapiLoaded() {
+  gapi.load('client', async () => {
+    await gapi.client.init({
+      discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
+    });
+    gapiInited = true;
+    maybeEnableButton();
+  });
+}
+
+function gisLoaded() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GCAL_CLIENT_ID,
+    scope: GCAL_SCOPES,
+    callback: async (resp) => {
+      if (resp.error) {
+        showToast('❌', 'エラー', '認証に失敗しました', 'urgent');
+        return;
+      }
+      // 認証成功
+      const profile = await getGoogleProfile();
+      gcalConnected = true;
+      gcalEmail = profile.email || 'your@gmail.com';
+      gcalName = profile.name || 'あなた';
+      onGCalConnected();
+    },
+  });
+  gisInited = true;
+  maybeEnableButton();
+}
+
+function maybeEnableButton() {
+  if (gapiInited && gisInited) {
+    const btn = document.getElementById('gcal-header-btn');
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function getGoogleProfile() {
+  try {
+    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${gapi.client.getToken().access_token}` }
+    });
+    return await res.json();
+  } catch { return {}; }
+}
+
+// ===== DEMO AUTH（Client IDが未設定の場合のフォールバック）=====
 function demoGoogleAuth() {
+  if (GCAL_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
+    showToast('🔐', 'Googleアカウント認証中...', 'ポップアップで認証画面を開いています', '');
+    setTimeout(() => {
+      gcalConnected = true;
+      gcalEmail = 'yourname@gmail.com';
+      gcalName = 'あなたの名前';
+      onGCalConnected();
+    }, 1800);
+    return;
+  }
+  // gapiがまだ読み込まれていない場合
+  if (!gapiInited || !gisInited) {
+    showToast('⏳', 'もう少し待ってください', 'Googleの準備中です。5秒後にもう一度押してください', 'warning');
+    return;
+  }
+  // 本物の認証
   closeCalModal();
-  // Simulate OAuth popup
-  showToast('🔐', 'Googleアカウント認証中...', 'ポップアップで認証画面を開いています', '');
-  setTimeout(() => {
-    gcalConnected = true;
-    gcalEmail = 'yourname@gmail.com';
-    gcalName = 'あなたの名前';
-    onGCalConnected();
-  }, 1800);
+  if (gapi.client.getToken() === null) {
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  } else {
+    tokenClient.requestAccessToken({ prompt: '' });
+  }
 }
 
 function onGCalConnected() {
@@ -1584,11 +1826,14 @@ function onGCalConnected() {
   showToast('✅', 'Googleカレンダー接続完了！', `${gcalEmail} と連携しました`, 'success');
   addNotif('green', '📅 カレンダー接続', `${gcalEmail} で認証完了`);
 
-  // Auto-sync all pending tasks
   setTimeout(() => openCalModalConnected(), 800);
 }
 
 function disconnectGCal() {
+  if (GCAL_CLIENT_ID !== 'YOUR_CLIENT_ID_HERE' && gapi.client.getToken()) {
+    google.accounts.oauth2.revoke(gapi.client.getToken().access_token);
+    gapi.client.setToken('');
+  }
   gcalConnected = false;
   syncedTaskIds.clear();
   closeCalModal();
@@ -1608,6 +1853,42 @@ function disconnectGCal() {
   renderTasks();
 }
 
+// ===== 本物のカレンダー登録 =====
+async function addEventToGoogleCalendar(task) {
+  if (GCAL_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
+    // デモモード：擬似的に成功
+    return true;
+  }
+  try {
+    const bufferDays = BUFFER_DAYS[task.priority];
+    const event = {
+      summary: `【TASKFLOW】${task.title}`,
+      description: `優先度: ${PRIORITY_LABEL[task.priority]}\n担当: ${task.assignee || 'なし'}\nメモ: ${task.memo || 'なし'}`,
+      start: { date: task.due },
+      end: { date: task.due },
+      reminders: {
+        useDefault: false,
+        overrides: bufferDays > 0 ? [
+          { method: 'popup', minutes: bufferDays * 24 * 60 },
+          { method: 'popup', minutes: 24 * 60 },
+          { method: 'popup', minutes: 60 },
+        ] : [
+          { method: 'popup', minutes: 60 },
+        ],
+      },
+      colorId: task.priority === 'critical' ? '11' : task.priority === 'high' ? '6' : '9',
+    };
+    await gapi.client.calendar.events.insert({
+      calendarId: 'primary',
+      resource: event,
+    });
+    return true;
+  } catch (err) {
+    console.error('Calendar API error:', err);
+    return false;
+  }
+}
+
 // ===== CAL MODAL =====
 function openCalModal() {
   if (gcalConnected) {
@@ -1625,7 +1906,6 @@ function openCalModalConnected() {
   document.getElementById('cal-modal-name').textContent = gcalName;
   document.getElementById('cal-modal-email').textContent = gcalEmail;
 
-  // Build task checklist
   const pending = tasks.filter(t => !t.completed);
   const list = document.getElementById('cal-task-checklist');
   if (pending.length === 0) {
@@ -1659,11 +1939,9 @@ function toggleCalCheck(id) {
 }
 
 // ===== SYNC =====
-function doSync() {
-  // Select all checked
+async function doSync() {
   const toSync = tasks.filter(t => !t.completed && syncedTaskIds.has(t.id));
   if (toSync.length === 0) {
-    // Select all pending if none selected
     tasks.filter(t => !t.completed).forEach(t => syncedTaskIds.add(t.id));
   }
   closeCalModal();
@@ -1678,12 +1956,23 @@ function runSyncAnimation() {
     setTimeout(() => {
       const el = document.getElementById(`step-${n}`);
       el.classList.add('active');
-      if (i > 0) document.getElementById(`step-${i}`).classList.remove('active'), document.getElementById(`step-${i}`).classList.add('done');
+      if (i > 0) {
+        document.getElementById(`step-${i}`).classList.remove('active');
+        document.getElementById(`step-${i}`).classList.add('done');
+      }
     }, i * 700);
   });
-  setTimeout(() => {
+  setTimeout(async () => {
     document.getElementById('step-5').classList.remove('active');
     document.getElementById('step-5').classList.add('done');
+
+    // 本物のカレンダー登録
+    const toSync = tasks.filter(t => !t.completed && syncedTaskIds.has(t.id));
+    for (const task of toSync) {
+      await addEventToGoogleCalendar(task);
+      task.gcalSynced = true;
+    }
+
     setTimeout(() => {
       overlay.classList.remove('show');
       steps.forEach(n => {
@@ -1718,7 +2007,6 @@ function renderMiniCal() {
   const daysInMonth = new Date(y, m+1, 0).getDate();
   const today = new Date();
 
-  // Build task date map
   const taskDates = {};
   tasks.filter(t => !t.completed).forEach(t => {
     const d = new Date(t.due);
@@ -1770,11 +2058,6 @@ function renderSyncedList() {
   }).join('');
 }
 
-// ===== PATCH renderTasks to show gcal sync button =====
-const _origRenderTasks = renderTasks;
-// We patch gcal button into task cards after render
-const _origRenderTasksInner = window.renderTasks;
-
 function syncSingleTask(id) {
   const task = tasks.find(t => t.id === id);
   if (!task || !gcalConnected) return;
@@ -1782,15 +2065,22 @@ function syncSingleTask(id) {
     showToast('📅', '同期済み', `「${task.title}」はすでにカレンダーに登録されています`, '');
     return;
   }
-  task.gcalSynced = true;
-  syncedTaskIds.add(id);
-  renderTasks();
-  renderSyncedList();
-  renderMiniCal();
-  const bufferDays = BUFFER_DAYS[task.priority];
-  showToast('📅', 'カレンダーに登録しました', `期限日${bufferDays > 0 ? 'の'+bufferDays+'日前' : '当日'}にリマインダーを設定`, 'success');
-  addNotif('green', '📅 カレンダー登録', `「${task.title}」を${task.due}に追加`);
+  addEventToGoogleCalendar(task).then(success => {
+    if (success) {
+      task.gcalSynced = true;
+      syncedTaskIds.add(id);
+      renderTasks();
+      renderSyncedList();
+      renderMiniCal();
+      const bufferDays = BUFFER_DAYS[task.priority];
+      showToast('📅', 'カレンダーに登録しました', `期限日${bufferDays > 0 ? 'の'+bufferDays+'日前' : '当日'}にリマインダーを設定`, 'success');
+      addNotif('green', '📅 カレンダー登録', `「${task.title}」を${task.due}に追加`);
+    }
+  });
 }
 </script>
+<!-- Google API -->
+<script src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+<script src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
 </body>
 </html>
