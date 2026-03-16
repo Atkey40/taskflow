@@ -1046,6 +1046,110 @@
     .gcal-connect-bar { margin: 0 14px 12px; }
     .alert-banner { margin: 0 14px 14px; }
   }
+
+  /* ===== 視認性向上 ===== */
+  .task-title {
+    font-size: 1.05rem !important;
+    font-weight: 600 !important;
+    white-space: normal !important;
+    line-height: 1.4;
+    margin-bottom: 8px !important;
+  }
+  .task-date {
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--surface2);
+  }
+  .task-date.overdue {
+    background: rgba(230,57,70,0.15) !important;
+    color: var(--danger) !important;
+    animation: pulse-text 1.5s infinite;
+  }
+  .task-date.soon {
+    background: rgba(247,151,30,0.15) !important;
+    color: var(--warn) !important;
+  }
+  @keyframes pulse-text { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  .badge-critical { background: var(--danger) !important; color: #fff !important; border: none !important; font-size: 0.75rem !important; padding: 4px 12px !important; }
+  .badge-high { background: var(--warn) !important; color: #fff !important; border: none !important; font-size: 0.75rem !important; padding: 4px 12px !important; }
+  .badge-medium { background: var(--accent) !important; color: #fff !important; border: none !important; font-size: 0.75rem !important; padding: 4px 12px !important; }
+  .badge-low { background: var(--safe) !important; color: #fff !important; border: none !important; font-size: 0.75rem !important; padding: 4px 12px !important; }
+
+  .task-card::before { width: 6px !important; }
+  .btn { padding: 10px 22px !important; font-size: 0.85rem !important; min-height: 42px; }
+  .snooze-btn { padding: 7px 14px !important; font-size: 0.75rem !important; min-height: 36px !important; }
+  .gcal-btn { padding: 7px 14px !important; font-size: 0.75rem !important; min-height: 36px !important; }
+
+  /* ===== スマホ用ボトムナビ ===== */
+  .bottom-nav { display: none; }
+
+  @media (max-width: 768px) {
+    .bottom-nav {
+      display: flex;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--surface);
+      border-top: 2px solid var(--border);
+      z-index: 200;
+      height: 64px;
+    }
+    .bottom-nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 8px 4px;
+      transition: all 0.2s;
+    }
+    .bottom-nav-item.active { color: var(--accent); background: rgba(108,99,255,0.08); }
+    .bottom-nav-item .nav-icon { font-size: 1.4rem; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .app { padding-bottom: 70px; }
+    .fab { bottom: 80px !important; }
+    .task-card { padding: 14px 16px !important; }
+    .score-badge { width: 48px !important; height: 48px !important; font-size: 0.9rem !important; }
+    .stat-value { font-size: 2rem !important; }
+  }
+
+  /* ===== カレンダーページ ===== */
+  .calendar-page { padding: 16px; }
+  .calendar-page-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: 16px; }
+  .cal-month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .cal-month-label { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); }
+  .cal-nav-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; cursor: pointer; color: var(--text); font-size: 1rem; min-height: 38px; }
+  .cal-grid-full { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 16px; }
+  .cal-day-label-full { text-align: center; font-size: 0.72rem; font-weight: 700; color: var(--muted); padding: 4px 0; }
+  .cal-day-full {
+    aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border-radius: 8px; font-size: 0.85rem; cursor: pointer; position: relative;
+    border: 1px solid transparent; transition: all 0.15s; min-height: 40px;
+  }
+  .cal-day-full:hover { background: var(--surface2); }
+  .cal-day-full.today { background: var(--accent); color: #fff; font-weight: 700; }
+  .cal-day-full.has-task { border-color: var(--accent); }
+  .cal-day-full.has-overdue { border-color: var(--danger); background: rgba(230,57,70,0.08); }
+  .cal-day-full .day-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); position: absolute; bottom: 3px; }
+  .cal-day-full.has-overdue .day-dot { background: var(--danger); }
+
+  /* ===== 通知ページ ===== */
+  .notif-page { padding: 16px; }
+  .notif-page-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: 16px; }
+  .notif-page .notif-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .notif-page .notif-text { font-size: 0.88rem !important; }
+  .notif-page .notif-time { font-size: 0.75rem !important; }
 </style>
 </head>
 <body>
@@ -1106,7 +1210,7 @@
   </div>
 
   <!-- Main -->
-  <div class="main">
+  <div class="main page active" id="page-tasks">
     <div class="task-section">
       <div class="section-header">
         <div class="section-title">
@@ -1196,8 +1300,75 @@
   </div>
 </div>
 
-<!-- Toast Container -->
-<div class="toast-container" id="toast-container"></div>
+<!-- スマホ用ボトムナビ -->
+<nav class="bottom-nav">
+  <button class="bottom-nav-item active" onclick="switchPage('tasks', this)">
+    <span class="nav-icon">📋</span>タスク
+  </button>
+  <button class="bottom-nav-item" onclick="switchPage('calendar', this)">
+    <span class="nav-icon">📅</span>カレンダー
+  </button>
+  <button class="bottom-nav-item" onclick="switchPage('notif', this)">
+    <span class="nav-icon">🔔</span>通知
+  </button>
+  <button class="bottom-nav-item" onclick="switchPage('settings', this)">
+    <span class="nav-icon">⚙️</span>設定
+  </button>
+</nav>
+
+<!-- スマホ用カレンダーページ -->
+<div class="page" id="page-calendar">
+  <div class="calendar-page">
+    <div class="calendar-page-title">📅 カレンダー</div>
+    <div class="cal-month-nav">
+      <button class="cal-nav-btn" onclick="changeFullCal(-1)">‹</button>
+      <div class="cal-month-label" id="full-cal-month"></div>
+      <button class="cal-nav-btn" onclick="changeFullCal(1)">›</button>
+    </div>
+    <div class="cal-grid-full" id="full-cal-grid"></div>
+    <div id="full-cal-tasks" style="margin-top:8px"></div>
+  </div>
+</div>
+
+<!-- スマホ用通知ページ -->
+<div class="page" id="page-notif">
+  <div class="notif-page">
+    <div class="notif-page-title">🔔 通知ログ</div>
+    <div id="notif-log-mobile">
+      <div style="font-size:0.88rem;color:var(--muted);text-align:center;padding:30px 0">通知はまだありません</div>
+    </div>
+  </div>
+</div>
+
+<!-- スマホ用設定ページ -->
+<div class="page" id="page-settings">
+  <div style="padding:16px">
+    <div style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:var(--text);margin-bottom:16px">⚙️ 設定</div>
+    <div class="setting-row">
+      <div class="setting-label" style="font-size:0.9rem">🖥️ 画面内ポップアップ</div>
+      <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label" style="font-size:0.9rem">📧 メール通知</div>
+      <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label" style="font-size:0.9rem">📱 スマホプッシュ</div>
+      <button class="toggle on" onclick="requestPushPermission(this)"></button>
+    </div>
+    <div class="setting-row" style="border:none">
+      <div class="setting-label" style="font-size:0.9rem">🌙 ダークモード</div>
+      <button class="toggle" id="theme-toggle-settings" onclick="toggleTheme()"></button>
+    </div>
+    <div style="margin-top:24px;padding:16px;background:var(--surface2);border-radius:12px;font-size:0.82rem;color:var(--muted);line-height:1.8">
+      <strong style="color:var(--text)">📐 バッファ自動設定</strong><br>
+      🔴 重要 → <strong style="color:var(--text)">3日前</strong>から警告<br>
+      🟠 高 → <strong style="color:var(--text)">2日前</strong>から警告<br>
+      🔵 中 → <strong style="color:var(--text)">1日前</strong>から警告<br>
+      🟢 低 → <strong style="color:var(--text)">当日</strong>に警告
+    </div>
+  </div>
+</div>
 
 <!-- Add Task Modal -->
 <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
@@ -1600,12 +1771,104 @@ function toggleTheme() {
   if (isDark) {
     document.documentElement.removeAttribute('data-theme');
     document.getElementById('theme-btn').textContent = '🌙';
+    const st = document.getElementById('theme-toggle-settings');
+    if (st) st.classList.remove('on');
     localStorage.setItem('theme', 'light');
   } else {
     document.documentElement.setAttribute('data-theme', 'dark');
     document.getElementById('theme-btn').textContent = '☀️';
+    const st = document.getElementById('theme-toggle-settings');
+    if (st) st.classList.add('on');
     localStorage.setItem('theme', 'dark');
   }
+}
+
+// ===== ページ切り替え =====
+let fullCalMonth = new Date();
+
+function switchPage(name, btn) {
+  // ページ切り替え
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('page-' + name);
+  if (target) target.classList.add('active');
+
+  // ナビボタン切り替え
+  document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  // カレンダーページなら描画
+  if (name === 'calendar') renderFullCal();
+
+  // 通知ページなら同期
+  if (name === 'notif') syncNotifMobile();
+}
+
+function syncNotifMobile() {
+  const src = document.getElementById('notif-log');
+  const dst = document.getElementById('notif-log-mobile');
+  if (src && dst) {
+    dst.innerHTML = src.innerHTML || '<div style="font-size:0.88rem;color:var(--muted);text-align:center;padding:30px 0">通知はまだありません</div>';
+  }
+}
+
+function renderFullCal() {
+  const grid = document.getElementById('full-cal-grid');
+  const monthLabel = document.getElementById('full-cal-month');
+  if (!grid) return;
+
+  const y = fullCalMonth.getFullYear();
+  const m = fullCalMonth.getMonth();
+  monthLabel.textContent = `${y}年${m+1}月`;
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const today = new Date();
+
+  const taskDates = {};
+  tasks.filter(t => !t.completed).forEach(t => {
+    const d = new Date(t.due);
+    if (d.getFullYear() === y && d.getMonth() === m) {
+      const day = d.getDate();
+      taskDates[day] = getDaysLeft(t.due) < 0 ? 'overdue' : 'task';
+    }
+  });
+
+  let html = ['日','月','火','水','木','金','土'].map(d =>
+    `<div class="cal-day-label-full">${d}</div>`).join('');
+  html += Array(firstDay).fill('<div></div>').join('');
+  html += Array.from({length: daysInMonth}, (_,i) => {
+    const day = i+1;
+    const isToday = today.getFullYear()===y && today.getMonth()===m && today.getDate()===day;
+    const hasTask = taskDates[day];
+    const cls = `cal-day-full ${isToday?'today':''} ${hasTask==='overdue'?'has-overdue':hasTask?'has-task':''}`;
+    const dot = hasTask ? '<div class="day-dot"></div>' : '';
+    return `<div class="${cls}" onclick="showDayTasks(${y},${m+1},${day})">${day}${dot}</div>`;
+  }).join('');
+
+  grid.innerHTML = html;
+  document.getElementById('full-cal-tasks').innerHTML = '';
+}
+
+function changeFullCal(dir) {
+  fullCalMonth = new Date(fullCalMonth.getFullYear(), fullCalMonth.getMonth() + dir, 1);
+  renderFullCal();
+}
+
+function showDayTasks(y, m, d) {
+  const dateStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const dayTasks = tasks.filter(t => t.due === dateStr && !t.completed);
+  const container = document.getElementById('full-cal-tasks');
+  if (dayTasks.length === 0) {
+    container.innerHTML = `<div style="font-size:0.82rem;color:var(--muted);text-align:center;padding:12px">${m}月${d}日のタスクはありません</div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div style="font-size:0.82rem;font-weight:700;color:var(--text);margin-bottom:8px">${m}月${d}日のタスク</div>
+    ${dayTasks.map(t => `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;border-left:4px solid ${t.priority==='critical'?'var(--danger)':t.priority==='high'?'var(--warn)':t.priority==='medium'?'var(--accent)':'var(--safe)'}">
+        <div style="font-size:0.9rem;font-weight:600;color:var(--text)">${t.title}</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:4px">${t.assignee ? '👤 '+t.assignee : ''}</div>
+      </div>`).join('')}`;
 }
 
 // ページ読み込み時にテーマを復元
