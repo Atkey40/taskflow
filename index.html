@@ -1117,6 +1117,8 @@
     .bottom-nav-item .nav-icon { font-size: 1.4rem; }
     .page { display: none; }
     .page.active { display: block; }
+    /* タスクページはflexレイアウトを維持 */
+    #page-tasks.active { display: flex; flex-direction: column; }
     .app { padding-bottom: 70px; }
     .fab { bottom: 80px !important; }
     .task-card { padding: 14px 16px !important; }
@@ -1299,6 +1301,7 @@
     </div>
   </div>
 </div>
+<!-- page-tasks ここまで -->
 
 <!-- スマホ用ボトムナビ -->
 <nav class="bottom-nav">
